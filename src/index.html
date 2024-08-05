@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Interactive LLM Chat Interface with Multi-line Input</title>
+        <style>
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+            }
+            body {
+                display: flex;
+                flex-direction: column;
+            }
+            .chat-container {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                background-color: #f0f0f0;
+                height: 100vh;
+            }
+            .chat-messages {
+                flex-grow: 1;
+                overflow-y: auto;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+            }
+            .message {
+                margin-bottom: 10px;
+                padding: 10px;
+                border-radius: 8px;
+                max-width: 70%;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+            .user-message {
+                background-color: #007bff;
+                color: white;
+                align-self: flex-end;
+            }
+            .llm-message {
+                background-color: white;
+                color: black;
+                align-self: flex-start;
+                border: 1px solid #ccc;
+            }
+            .input-area {
+                display: flex;
+                padding: 20px;
+                background-color: white;
+                border-top: 1px solid #ccc;
+            }
+            #user-input {
+                flex-grow: 1;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-size: 16px;
+                resize: vertical;
+                min-height: 40px;
+                max-height: 120px;
+            }
+            #send-button {
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                margin-left: 10px;
+                cursor: pointer;
+                font-size: 16px;
+                align-self: flex-end;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <div class="message llm-message">
+                    Hello! How can I assist you today?
+                </div>
+            </div>
+            <div class="input-area">
+                <textarea
+                    id="user-input"
+                    placeholder="Type your message... (Shift+Enter for new line)"
+                ></textarea>
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+
+        <script>
+            const chatMessages = document.getElementById("chat-messages");
+            const userInput = document.getElementById("user-input");
+            const sendButton = document.getElementById("send-button");
+
+            function addMessage(message, isUser) {
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("message");
+                messageElement.classList.add(
+                    isUser ? "user-message" : "llm-message",
+                );
+                messageElement.textContent = message;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function sendMessage() {
+                const message = userInput.value.trim();
+                if (message) {
+                    addMessage(message, true);
+                    userInput.value = "";
+                    userInput.style.height = "auto";
+                }
+            }
+
+            sendButton.addEventListener("click", sendMessage);
+
+            userInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            userInput.addEventListener("input", function () {
+                this.style.height = "auto";
+                this.style.height = this.scrollHeight + "px";
+            });
+        </script>
+    </body>
+</html>
