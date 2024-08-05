@@ -11,7 +11,7 @@
                 height: 100%;
                 margin: 0;
                 padding: 0;
-                font-family: Arial, sans-serif;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
                 background-color: #f0f0f0;
             }
             .container {
@@ -25,6 +25,8 @@
             }
             h1 {
                 margin-top: 0;
+                color: #333;
+                text-align: center;
             }
             #chat-container {
                 flex-grow: 1;
@@ -38,6 +40,7 @@
             .input-area {
                 display: flex;
                 gap: 10px;
+                flex-wrap: wrap;
             }
             #user-input {
                 flex-grow: 1;
@@ -45,31 +48,82 @@
                 border: 1px solid #ddd;
                 border-radius: 5px;
                 resize: vertical;
+                min-height: 60px;
             }
             #send-button,
             #clear-button {
                 padding: 10px 20px;
-                background-color: #4caf50;
                 color: white;
                 border: none;
                 border-radius: 5px;
                 cursor: pointer;
+                transition: background-color 0.3s;
+            }
+            #send-button {
+                background-color: #4caf50;
+            }
+            #send-button:hover {
+                background-color: #45a049;
             }
             #clear-button {
                 background-color: #f44336;
             }
+            #clear-button:hover {
+                background-color: #d32f2f;
+            }
             .message {
-                margin-bottom: 10px;
-                padding: 10px;
-                border-radius: 5px;
+                margin-bottom: 15px;
+                padding: 12px;
+                border-radius: 8px;
                 white-space: pre-wrap;
+                max-width: 80%;
             }
             .user-message {
                 background-color: #e6f2ff;
                 text-align: right;
+                margin-left: auto;
             }
             .ai-message {
                 background-color: #f0f0f0;
+            }
+            #loading-indicator {
+                display: none;
+                text-align: center;
+                margin-top: 10px;
+            }
+            .typing-indicator {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                background-color: #333;
+                border-radius: 50%;
+                margin: 0 2px;
+                animation: typing 1s infinite;
+            }
+            .typing-indicator:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+            .typing-indicator:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+            @keyframes typing {
+                0% {
+                    opacity: 0.3;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0.3;
+                }
+            }
+            @media (max-width: 600px) {
+                .container {
+                    padding: 10px;
+                }
+                .message {
+                    max-width: 90%;
+                }
             }
         </style>
     </head>
@@ -86,6 +140,11 @@
                 <button id="send-button" onclick="sendMessage()">Send</button>
                 <button id="clear-button" onclick="clearChat()">Clear</button>
             </div>
+            <div id="loading-indicator">
+                <div class="typing-indicator"></div>
+                <div class="typing-indicator"></div>
+                <div class="typing-indicator"></div>
+            </div>
         </div>
 
         <script>
@@ -98,6 +157,8 @@
                     appendUserMessage(message);
                     userInput.value = "";
                     sendMessageToAI(message);
+                    document.getElementById("loading-indicator").style.display =
+                        "block";
                 }
             }
 
@@ -123,6 +184,8 @@
 
             function endAIMessage() {
                 currentAIMessage = null;
+                document.getElementById("loading-indicator").style.display =
+                    "none";
             }
 
             function appendMessage(content, className) {
@@ -136,6 +199,8 @@
 
             function showError(message) {
                 appendMessage("Error: " + message, "ai-message");
+                document.getElementById("loading-indicator").style.display =
+                    "none";
             }
 
             function clearChatUI() {

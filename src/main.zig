@@ -26,7 +26,6 @@ pub fn main() !void {
     webui.wait();
 }
 
-
 fn sendMessageToAI(e: webui.Event) void {
     const message = e.getString();
 
@@ -88,6 +87,7 @@ fn showErrorToUser(e: webui.Event, message: []const u8) void {
     defer allocator.free(error_script);
     e.runClient(error_script);
 }
+
 fn writeToWindow(context: ?*anyopaque, content: []const u8) !void {
     const event: *const webui.Event = @ptrCast(@alignCast(context.?));
     const escaped_content = try std.json.stringifyAlloc(allocator, content, .{});
@@ -101,11 +101,6 @@ fn writeToWindow(context: ?*anyopaque, content: []const u8) !void {
 }
 
 fn clearChatHistory(e: webui.Event) void {
-    // for (message_history.items) |message| {
-    //     if (message.role.ptr != &message.content.ptr)  {
-    //         allocator.free(message.content);
-    //     }
-    // }
     message_history.clearRetainingCapacity();
     e.runClient("clearChatUI()");
 }

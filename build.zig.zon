@@ -25,7 +25,7 @@
     .dependencies = .{
         .zai = .{
             .url = "git+https://github.com/AdjectiveAllison/zai.git#main",
-            .hash = "12203c9cb727283d9a5de61e6d10401c8709fb7c61bb5b70f81030c1fa8d1bac96cc",
+            .hash = "12206713316a14cb1519c1d1fd1713881f256d87747e1e85217be9fb8fb4c2eddefc",
         },
         .@"zig-webui" = .{
             .url = "git+https://github.com/webui-dev/zig-webui#96af9ece9dba546f6b38348252426c82b541ed96",
