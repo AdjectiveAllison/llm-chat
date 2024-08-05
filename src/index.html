@@ -117,6 +117,18 @@
                     opacity: 0.3;
                 }
             }
+            .settings {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .settings select,
+            .settings input {
+                flex-grow: 1;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
             @media (max-width: 600px) {
                 .container {
                     padding: 10px;
@@ -130,6 +142,20 @@
     <body>
         <div class="container">
             <h1>LLM Chat</h1>
+            <div class="settings">
+                <select id="provider-select" onchange="updateProvider()">
+                    <option value="OpenAI">OpenAI</option>
+                    <option value="TogetherAI">TogetherAI</option>
+                    <option value="OctoAI" selected>OctoAI</option>
+                    <option value="OpenRouter">OpenRouter</option>
+                </select>
+                <input
+                    type="text"
+                    id="model-input"
+                    value="mixtral-8x7b-instruct-fp16"
+                    onchange="updateModel()"
+                />
+            </div>
             <div id="chat-container"></div>
             <div class="input-area">
                 <textarea
@@ -213,6 +239,17 @@
                 clearChatHistory();
             }
 
+            function updateProvider() {
+                const provider =
+                    document.getElementById("provider-select").value;
+                window.backend.call("updateProvider", provider);
+            }
+
+            function updateModel() {
+                const model = document.getElementById("model-input").value;
+                window.backend.call("updateModel", model);
+            }
+
             document
                 .getElementById("user-input")
                 .addEventListener("keypress", function (e) {
@@ -221,6 +258,12 @@
                         sendMessage();
                     }
                 });
+
+            // Call updateProvider and updateModel on page load to set initial values
+            window.addEventListener("load", () => {
+                updateProvider();
+                updateModel();
+            });
         </script>
     </body>
 </html>
