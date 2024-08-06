@@ -242,12 +242,12 @@
             function updateProvider() {
                 const provider =
                     document.getElementById("provider-select").value;
-                window.backend.call("updateProvider", provider);
+                updateAIProvider(provider);
             }
 
             function updateModel() {
                 const model = document.getElementById("model-input").value;
-                window.backend.call("updateModel", model);
+                updateAIModel(model);
             }
 
             document
