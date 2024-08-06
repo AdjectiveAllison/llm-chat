@@ -10,7 +10,7 @@ const State = struct {
     ai: zai.AI,
     message_history: std.ArrayList(zai.Message),
     current_provider: zai.Provider,
-    current_model: []u8,
+    current_model: [:0]u8,
 
     fn init(allocator: std.mem.Allocator) !State {
         return State{
@@ -18,11 +18,14 @@ const State = struct {
             .ai = undefined, // We'll initialize this separately
             .message_history = std.ArrayList(zai.Message).init(allocator),
             .current_provider = .OctoAI,
-            .current_model = try allocator.dupe(u8, "mixtral-8x7b-instruct-fp16"),
+            .current_model = try allocator.dupeZ(u8, "mixtral-8x7b-instruct-fp16"),
         };
     }
 
     fn deinit(self: *State) void {
+        for (self.message_history.items) |msg| {
+            self.allocator.free(msg.content);
+        }
         self.message_history.deinit();
         self.allocator.free(self.current_model);
         self.ai.deinit();
@@ -63,11 +66,26 @@ fn bindFunctions(win: *webui) !void {
 
 fn sendMessageToAI(e: webui.Event) void {
     const raw_message = e.getString();
-    const message = std.mem.sliceTo(raw_message, 0); // This will stop at the null terminator
+    const message = std.mem.sliceTo(raw_message, 0);
     std.log.info("Received message: {s}", .{message});
 
-    state.message_history.append(.{ .role = "user", .content = message }) catch |err| {
+    // Debug: Print current message history
+    std.log.debug("Current message history:", .{});
+    var i:u32 = 0;
+    for (state.message_history.items) |msg| {
+        std.log.debug("Message {d}: role={s}, content={s}", .{ i, msg.role, msg.content });
+        i += 1;
+    }
+
+    const message_content = state.allocator.dupe(u8, message) catch |err| {
+        std.log.err("Error duplicating message content: {}", .{err});
+        showErrorToUser(e, "Failed to process user message");
+        return;
+    };
+
+    state.message_history.append(.{ .role = "user", .content = message_content }) catch |err| {
         std.log.err("Error appending user message: {}", .{err});
+        state.allocator.free(message_content);
         showErrorToUser(e, "Failed to process user message");
         return;
     };
@@ -91,7 +109,9 @@ fn sendMessageToAI(e: webui.Event) void {
 
     e.runClient("startNewAIMessage()");
 
-    std.debug.print("Payload: {any}\n", .{payload});
+    // Debug: Print full payload
+    std.log.debug("Full payload: {}", .{payload});
+
     chat_completion.requestStream(&state.ai, payload, user_writer) catch |err| {
         std.log.err("Error in chat completion: {}", .{err});
         const error_message = switch (err) {
@@ -110,10 +130,10 @@ fn sendMessageToAI(e: webui.Event) void {
         showErrorToUser(e, "Failed to process AI response");
         return;
     };
-    defer state.allocator.free(ai_response);
 
     state.message_history.append(.{ .role = "assistant", .content = ai_response }) catch |err| {
         std.log.err("Error appending AI response to history: {}", .{err});
+        state.allocator.free(ai_response);
         showErrorToUser(e, "Failed to save AI response");
         return;
     };
@@ -194,6 +214,9 @@ fn writeToWindow(context: ?*anyopaque, content: []const u8) !void {
 
 fn clearChatHistory(e: webui.Event) void {
     std.log.info("Clearing chat history", .{});
+    for (state.message_history.items) |msg| {
+        state.allocator.free(msg.content);
+    }
     state.message_history.clearRetainingCapacity();
     e.runClient("clearChatUI()");
 }
