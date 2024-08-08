@@ -67,15 +67,15 @@ fn bindFunctions(win: *webui) !void {
 fn sendMessageToAI(e: webui.Event) void {
     const raw_message = e.getString();
     const message = std.mem.sliceTo(raw_message, 0);
-    std.log.info("Received message: {s}", .{message});
+    // std.log.info("Received message: {s}", .{message});
 
-    // Debug: Print current message history
-    std.log.debug("Current message history:", .{});
-    var i:u32 = 0;
-    for (state.message_history.items) |msg| {
-        std.log.debug("Message {d}: role={s}, content={s}", .{ i, msg.role, msg.content });
-        i += 1;
-    }
+    // // Debug: Print current message history
+    // std.log.debug("Current message history:", .{});
+    // var i:u32 = 0;
+    // for (state.message_history.items) |msg| {
+    //     std.log.debug("Message {d}: role={s}, content={s}", .{ i, msg.role, msg.content });
+    //     i += 1;
+    // }
 
     const message_content = state.allocator.dupe(u8, message) catch |err| {
         std.log.err("Error duplicating message content: {}", .{err});
