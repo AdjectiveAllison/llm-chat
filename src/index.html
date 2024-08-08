@@ -72,6 +72,7 @@
                 background-color: #d32f2f;
             }
             .message {
+                position: relative;
                 margin-bottom: 15px;
                 padding: 12px;
                 border-radius: 8px;
@@ -129,6 +130,22 @@
                 border: 1px solid #ddd;
                 border-radius: 5px;
             }
+            .copy-button {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                background-color: #f0f0f0;
+                border: none;
+                border-radius: 3px;
+                padding: 3px 6px;
+                font-size: 12px;
+                cursor: pointer;
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+            .message:hover .copy-button {
+                opacity: 1;
+            }
             @media (max-width: 600px) {
                 .container {
                     padding: 10px;
@@ -175,6 +192,8 @@
 
         <script>
             let currentAIMessage = null;
+            let isStreaming = false;
+            let userScrolledUp = false;
 
             function sendMessage() {
                 const userInput = document.getElementById("user-input");
@@ -185,6 +204,9 @@
                     sendMessageToAI(message);
                     document.getElementById("loading-indicator").style.display =
                         "block";
+                    isStreaming = true;
+                    userScrolledUp = false;
+                    scrollToBottom();
                 }
             }
 
@@ -197,14 +219,16 @@
                 currentAIMessage = document.createElement("div");
                 currentAIMessage.classList.add("message", "ai-message");
                 chatContainer.appendChild(currentAIMessage);
+                addCopyButton(currentAIMessage);
             }
 
             function appendToAIMessage(content) {
                 if (currentAIMessage) {
                     currentAIMessage.textContent += content;
-                    const chatContainer =
-                        document.getElementById("chat-container");
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    addCopyButton(currentAIMessage);
+                    if (!userScrolledUp) {
+                        scrollToBottom();
+                    }
                 }
             }
 
@@ -212,6 +236,7 @@
                 currentAIMessage = null;
                 document.getElementById("loading-indicator").style.display =
                     "none";
+                isStreaming = false;
             }
 
             function appendMessage(content, className) {
@@ -220,6 +245,61 @@
                 messageElement.classList.add("message", className);
                 messageElement.textContent = content;
                 chatContainer.appendChild(messageElement);
+                addCopyButton(messageElement);
+                if (!userScrolledUp) {
+                    scrollToBottom();
+                }
+            }
+
+            function addCopyButton(messageElement) {
+                const copyButton = document.createElement("button");
+                copyButton.textContent = "Copy";
+                copyButton.classList.add("copy-button");
+                copyButton.onclick = function () {
+                    navigator.clipboard
+                        .writeText(
+                            messageElement.textContent
+                                .replace("Copy", "")
+                                .trim(),
+                        )
+                        .then(() => {
+                            copyButton.textContent = "Copied!";
+                            setTimeout(() => {
+                                copyButton.textContent = "Copy";
+                            }, 2000);
+                        })
+                        .catch((err) => {
+                            console.error("Error in copying text: ", err);
+                        });
+                };
+                messageElement.appendChild(copyButton);
+            }
+
+            function updateCopyButton(messageElement) {
+                const copyButton = messageElement.querySelector(".copy-button");
+                if (copyButton) {
+                    copyButton.onclick = function () {
+                        navigator.clipboard
+                            .writeText(
+                                messageElement.textContent
+                                    .replace("Copy", "")
+                                    .trim(),
+                            )
+                            .then(() => {
+                                copyButton.textContent = "Copied!";
+                                setTimeout(() => {
+                                    copyButton.textContent = "Copy";
+                                }, 2000);
+                            })
+                            .catch((err) => {
+                                console.error("Error in copying text: ", err);
+                            });
+                    };
+                }
+            }
+
+            function scrollToBottom() {
+                const chatContainer = document.getElementById("chat-container");
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
 
@@ -252,14 +332,43 @@
 
             document
                 .getElementById("user-input")
-                .addEventListener("keypress", function (e) {
+                .addEventListener("keydown", function (e) {
                     if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         sendMessage();
                     }
                 });
 
-            // Call updateProvider and updateModel on page load to set initial values
+            document.addEventListener("keydown", function (e) {
+                const chatContainer = document.getElementById("chat-container");
+                const scrollAmount = 50;
+
+                if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    chatContainer.scrollTop -= scrollAmount;
+                    userScrolledUp = true;
+                } else if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    chatContainer.scrollTop += scrollAmount;
+                    if (
+                        chatContainer.scrollHeight -
+                            chatContainer.clientHeight <=
+                        chatContainer.scrollTop + 1
+                    ) {
+                        userScrolledUp = false;
+                    }
+                }
+            });
+
+            document
+                .getElementById("chat-container")
+                .addEventListener("scroll", function () {
+                    const isScrolledToBottom =
+                        this.scrollHeight - this.clientHeight <=
+                        this.scrollTop + 1;
+                    userScrolledUp = !isScrolledToBottom;
+                });
+
             window.addEventListener("load", () => {
                 updateProvider();
                 updateModel();
