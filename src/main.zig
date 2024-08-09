@@ -110,7 +110,7 @@ fn sendMessageToAI(e: webui.Event) void {
     e.runClient("startNewAIMessage()");
 
     // Debug: Print full payload
-    std.log.debug("Full payload: {}", .{payload});
+    // std.log.debug("Full payload: {}", .{payload});
 
     chat_completion.requestStream(&state.ai, payload, user_writer) catch |err| {
         std.log.err("Error in chat completion: {}", .{err});

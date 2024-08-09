@@ -76,8 +76,10 @@
                 margin-bottom: 15px;
                 padding: 12px;
                 border-radius: 8px;
-                white-space: pre-wrap;
                 max-width: 80%;
+            }
+            .message-content {
+                white-space: pre-wrap;
             }
             .user-message {
                 background-color: #e6f2ff;
@@ -218,14 +220,21 @@
                 const chatContainer = document.getElementById("chat-container");
                 currentAIMessage = document.createElement("div");
                 currentAIMessage.classList.add("message", "ai-message");
+
+                const contentElement = document.createElement("div");
+                contentElement.classList.add("message-content");
+                currentAIMessage.appendChild(contentElement);
+
                 chatContainer.appendChild(currentAIMessage);
                 addCopyButton(currentAIMessage);
             }
 
             function appendToAIMessage(content) {
                 if (currentAIMessage) {
-                    currentAIMessage.textContent += content;
-                    addCopyButton(currentAIMessage);
+                    const contentElement =
+                        currentAIMessage.querySelector(".message-content");
+                    const textNode = document.createTextNode(content);
+                    contentElement.appendChild(textNode);
                     if (!userScrolledUp) {
                         scrollToBottom();
                     }
@@ -243,9 +252,15 @@
                 const chatContainer = document.getElementById("chat-container");
                 const messageElement = document.createElement("div");
                 messageElement.classList.add("message", className);
-                messageElement.textContent = content;
-                chatContainer.appendChild(messageElement);
+
+                const contentElement = document.createElement("div");
+                contentElement.classList.add("message-content");
+                contentElement.textContent = content;
+                messageElement.appendChild(contentElement);
+
                 addCopyButton(messageElement);
+                chatContainer.appendChild(messageElement);
+
                 if (!userScrolledUp) {
                     scrollToBottom();
                 }
@@ -256,12 +271,11 @@
                 copyButton.textContent = "Copy";
                 copyButton.classList.add("copy-button");
                 copyButton.onclick = function () {
+                    const contentElement =
+                        messageElement.querySelector(".message-content");
+                    const textContent = contentElement.textContent.trim();
                     navigator.clipboard
-                        .writeText(
-                            messageElement.textContent
-                                .replace("Copy", "")
-                                .trim(),
-                        )
+                        .writeText(textContent)
                         .then(() => {
                             copyButton.textContent = "Copied!";
                             setTimeout(() => {
@@ -273,29 +287,6 @@
                         });
                 };
                 messageElement.appendChild(copyButton);
-            }
-
-            function updateCopyButton(messageElement) {
-                const copyButton = messageElement.querySelector(".copy-button");
-                if (copyButton) {
-                    copyButton.onclick = function () {
-                        navigator.clipboard
-                            .writeText(
-                                messageElement.textContent
-                                    .replace("Copy", "")
-                                    .trim(),
-                            )
-                            .then(() => {
-                                copyButton.textContent = "Copied!";
-                                setTimeout(() => {
-                                    copyButton.textContent = "Copy";
-                                }, 2000);
-                            })
-                            .catch((err) => {
-                                console.error("Error in copying text: ", err);
-                            });
-                    };
-                }
             }
 
             function scrollToBottom() {
