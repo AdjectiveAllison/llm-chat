@@ -8,7 +8,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const exe = b.addExecutable(.{
-        .name = "llm-chat-zig",
+        .name = "llm-chat",
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
