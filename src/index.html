@@ -18,7 +18,7 @@
                 display: flex;
                 flex-direction: column;
                 height: 100%;
-                max-width: 800px;
+                max-width: 1200px;
                 margin: 0 auto;
                 padding: 20px;
                 box-sizing: border-box;
@@ -156,39 +156,152 @@
                     max-width: 90%;
                 }
             }
+            .chat-layout {
+                display: flex;
+                gap: 20px;
+                height: calc(100% - 60px); /* Adjust based on your h1 height */
+            }
+
+            .chat-area {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .payload-params {
+                width: 250px;
+                background-color: #f8f8f8;
+                padding: 15px;
+                border-radius: 10px;
+                overflow-y: auto;
+            }
+
+            .param-group {
+                margin-bottom: 10px;
+            }
+
+            .param-group label {
+                display: block;
+                margin-bottom: 5px;
+            }
+
+            .param-group input,
+            .param-group select {
+                width: 100%;
+                padding: 5px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>LLM Chat</h1>
-            <div class="settings">
-                <select id="provider-select" onchange="updateProvider()">
-                    <option value="OpenAI">OpenAI</option>
-                    <option value="TogetherAI">TogetherAI</option>
-                    <option value="OctoAI" selected>OctoAI</option>
-                    <option value="OpenRouter">OpenRouter</option>
-                </select>
-                <input
-                    type="text"
-                    id="model-input"
-                    value="mixtral-8x7b-instruct-fp16"
-                    onchange="updateModel()"
-                />
-            </div>
-            <div id="chat-container"></div>
-            <div class="input-area">
-                <textarea
-                    id="user-input"
-                    rows="3"
-                    placeholder="Type your message here..."
-                ></textarea>
-                <button id="send-button" onclick="sendMessage()">Send</button>
-                <button id="clear-button" onclick="clearChat()">Clear</button>
-            </div>
-            <div id="loading-indicator">
-                <div class="typing-indicator"></div>
-                <div class="typing-indicator"></div>
-                <div class="typing-indicator"></div>
+            <div class="chat-layout">
+                <div class="chat-area">
+                    <div id="chat-container"></div>
+                    <div class="input-area">
+                        <textarea
+                            id="user-input"
+                            rows="3"
+                            placeholder="Type your message here..."
+                        ></textarea>
+                        <button id="send-button" onclick="sendMessage()">
+                            Send
+                        </button>
+                        <button id="clear-button" onclick="clearChat()">
+                            Clear
+                        </button>
+                    </div>
+                    <div id="loading-indicator">
+                        <div class="typing-indicator"></div>
+                        <div class="typing-indicator"></div>
+                        <div class="typing-indicator"></div>
+                    </div>
+                </div>
+                <div class="payload-params">
+                    <h3>Payload Parameters</h3>
+                    <div class="param-group">
+                        <label for="model-input">Model:</label>
+                        <input
+                            type="text"
+                            id="model-input"
+                            value="mixtral-8x7b-instruct-fp16"
+                            onchange="updateModel()"
+                        />
+                    </div>
+                    <div class="param-group">
+                        <label for="max-tokens">Max Tokens:</label>
+                        <input
+                            type="number"
+                            id="max-tokens"
+                            value=""
+                            onchange="updatePayloadParam('max_tokens', this.value)"
+                        />
+                    </div>
+                    <div class="param-group">
+                        <label for="temperature">Temperature:</label>
+                        <input
+                            type="number"
+                            id="temperature"
+                            value="0.7"
+                            step="0.1"
+                            min="0"
+                            max="2"
+                            onchange="updatePayloadParam('temperature', this.value)"
+                        />
+                    </div>
+                    <div class="param-group">
+                        <label for="top-p">Top P:</label>
+                        <input
+                            type="number"
+                            id="top-p"
+                            value="1.0"
+                            step="0.1"
+                            min="0"
+                            max="1"
+                            onchange="updatePayloadParam('top_p', this.value)"
+                        />
+                    </div>
+                    <div class="param-group">
+                        <label for="frequency-penalty"
+                            >Frequency Penalty:</label
+                        >
+                        <input
+                            type="number"
+                            id="frequency-penalty"
+                            value="0.0"
+                            step="0.1"
+                            min="-2"
+                            max="2"
+                            onchange="updatePayloadParam('frequency_penalty', this.value)"
+                        />
+                    </div>
+                    <div class="param-group">
+                        <label for="presence-penalty">Presence Penalty:</label>
+                        <input
+                            type="number"
+                            id="presence-penalty"
+                            value="0.0"
+                            step="0.1"
+                            min="-2"
+                            max="2"
+                            onchange="updatePayloadParam('presence_penalty', this.value)"
+                        />
+                    </div>
+                    <div class="param-group">
+                        <label for="provider-select">Provider:</label>
+                        <select
+                            id="provider-select"
+                            onchange="updateProvider()"
+                        >
+                            <option value="OpenAI">OpenAI</option>
+                            <option value="TogetherAI">TogetherAI</option>
+                            <option value="OctoAI" selected>OctoAI</option>
+                            <option value="OpenRouter">OpenRouter</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -214,6 +327,10 @@
 
             function appendUserMessage(content) {
                 appendMessage(content, "user-message");
+            }
+
+            function updatePayloadParam(param, value) {
+                updatePayloadParams(param, value);
             }
 
             function startNewAIMessage() {

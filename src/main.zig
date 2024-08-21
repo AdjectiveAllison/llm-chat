@@ -10,6 +10,7 @@ const State = struct {
     ai: zai.AI,
     message_history: std.ArrayList(zai.Message),
     current_provider: zai.Provider,
+    payload_params: PayloadParams,
     current_model: [:0]u8,
 
     fn init(allocator: std.mem.Allocator) !State {
@@ -19,6 +20,13 @@ const State = struct {
             .message_history = std.ArrayList(zai.Message).init(allocator),
             .current_provider = .OctoAI,
             .current_model = try allocator.dupeZ(u8, "mixtral-8x7b-instruct-fp16"),
+            .payload_params = .{
+                .max_tokens = null,
+                .temperature = 0.7,
+                .top_p = 1.0,
+                .frequency_penalty = 0.0,
+                .presence_penalty = 0.0,
+            },
         };
     }
 
@@ -30,6 +38,14 @@ const State = struct {
         self.allocator.free(self.current_model);
         self.ai.deinit();
     }
+};
+
+const PayloadParams = struct {
+    max_tokens: ?u64,
+    temperature: f16,
+    top_p: f16,
+    frequency_penalty: f16,
+    presence_penalty: f16,
 };
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -62,6 +78,7 @@ fn bindFunctions(win: *webui) !void {
     _ = win.bind("clearChatHistory", clearChatHistory);
     _ = win.bind("updateAIProvider", updateAIProvider);
     _ = win.bind("updateAIModel", updateAIModel);
+    _ = win.bind("updatePayloadParams", updatePayloadParams);
 }
 
 fn sendMessageToAI(e: webui.Event) void {
@@ -97,7 +114,11 @@ fn sendMessageToAI(e: webui.Event) void {
     const payload = zai.CompletionPayload{
         .model = state.current_model,
         .messages = state.message_history.items,
-        .temperature = 0.7,
+        .max_tokens = state.payload_params.max_tokens,
+        .temperature = state.payload_params.temperature,
+        .top_p = state.payload_params.top_p,
+        .frequency_penalty = state.payload_params.frequency_penalty,
+        .presence_penalty = state.payload_params.presence_penalty,
         .stream = true,
     };
 
@@ -189,6 +210,23 @@ fn updateAIModel(e: webui.Event) void {
     // Update the current model
     state.current_model = new_model_owned;
     std.log.info("Model updated successfully to: {s}", .{state.current_model});
+}
+
+fn updatePayloadParams(e: webui.Event) void {
+    const param_name = e.getStringAt(0);
+    const param_value = e.getStringAt(1);
+
+    if (std.mem.eql(u8, param_name, "max_tokens")) {
+        state.payload_params.max_tokens = std.fmt.parseInt(u64, param_value, 10) catch null;
+    } else if (std.mem.eql(u8, param_name, "temperature")) {
+        state.payload_params.temperature = std.fmt.parseFloat(f16, param_value) catch 0.7;
+    } else if (std.mem.eql(u8, param_name, "top_p")) {
+        state.payload_params.top_p = std.fmt.parseFloat(f16, param_value) catch 1.0;
+    } else if (std.mem.eql(u8, param_name, "frequency_penalty")) {
+        state.payload_params.frequency_penalty = std.fmt.parseFloat(f16, param_value) catch 0.0;
+    } else if (std.mem.eql(u8, param_name, "presence_penalty")) {
+        state.payload_params.presence_penalty = std.fmt.parseFloat(f16, param_value) catch 0.0;
+    }
 }
 
 fn showErrorToUser(e: webui.Event, message: []const u8) void {
